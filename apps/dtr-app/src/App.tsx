@@ -1,6 +1,8 @@
 import './App.css'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SamplePage from "./pages/sample";
+import LoginV2 from './pages/login_v2';
+import { AuthProvider } from './components/AuthProvider';
 
 // Extend the Window interface to include the Config property
 declare global {
@@ -28,9 +30,12 @@ declare global {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/sample" element={<SamplePage />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<SamplePage />} />
+          <Route path="/login" element={<LoginV2 />} />
+        </Routes>
+      </AuthProvider>
     </Router>
   )
 }
