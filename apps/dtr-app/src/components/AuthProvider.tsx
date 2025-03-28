@@ -13,11 +13,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const useQuery = () => {
+  return new URLSearchParams(useLocation().search);
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const navigate = useNavigate();
   const originalPath = location.pathname;
+
+  const query = useQuery();
 
   const getAuthenticationIfo = async () => {
     const response = await fetch("/auth/userinfo");
@@ -28,6 +34,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       navigate(redirectTo, { replace: true });
     } else if (response.status == 401) {
       setIsAuthenticated(false);
+      const coverageId = query.get("coverageId") || "";
+      const medicationRequestId = query.get("medicationRequestId") || "";
+
+      localStorage.setItem("coverageId", coverageId);
+      localStorage.setItem("medicationRequestId", medicationRequestId);
+
       navigate("/login");
     }
   };

@@ -40,11 +40,13 @@ const useQuery = () => {
 };
 
 const QuestionnniarForm = ({
-  questionnaireId,
+  coverageId,
+  medicationRequestId,
   isQuestionnaireResponseSubmited,
   setIsQuestionnaireResponseSubmited,
 }: {
-  questionnaireId: string;
+  coverageId: string;
+  medicationRequestId: string;
   isQuestionnaireResponseSubmited: boolean;
   setIsQuestionnaireResponseSubmited: React.Dispatch<
     React.SetStateAction<boolean>
@@ -72,14 +74,14 @@ const QuestionnniarForm = ({
         name: "coverage",
         resource: {
           resourceType: "Coverage",
-          reference: "Coverage/367",
+          reference: "Coverage/" + coverageId,
         },
       },
       {
         name: "order",
         resource: {
           resourceType: "MedicationRequest",
-          reference: "MedicationRequest/111112",
+          reference: "MedicationRequest/" + medicationRequestId,
         },
       },
     ],
@@ -151,7 +153,7 @@ const QuestionnniarForm = ({
   const generateQuestionnaireResponse = () => {
     return {
       resourceType: "QuestionnaireResponse",
-      questionnaire: "Questionnaire/" + questionnaireId,
+      questionnaire: "Questionnaire/" + "questionnaireId", // TODO: replace with actual questionnaire ID
       status: "completed",
       subject: {
         reference: "Patient/101",
@@ -435,7 +437,7 @@ const PrescribedForm = () => {
                 wrapperClassName="date-picker-full-width"
                 disabled onChange={function (date: Date | null): void {
                   throw new Error(`Function not implemented. Date: ${date}`);
-                } }              />
+                }} />
             </Form.Group>
           </div>
         </Form>
@@ -445,7 +447,7 @@ const PrescribedForm = () => {
 };
 
 const DetailsDiv = ({ questionnaireId }: { questionnaireId: string }) => {
-  console.log("questionnaireId: ", questionnaireId);
+  console.log("questionnaireId:", questionnaireId);
   const dispatch = useDispatch();
   const savedPatientId = localStorage.getItem("selectedPatientId");
   if (savedPatientId) {
@@ -492,8 +494,12 @@ const DetailsDiv = ({ questionnaireId }: { questionnaireId: string }) => {
 export default function DrugPiorAuthPage() {
   const { isAuthenticated } = useAuth();
   const query = useQuery();
-  const questionnaireId = query.get("questionnaireId");
-  console.log("questionnaireId", questionnaireId);
+
+  const coverageId = query.get("coverageId") || localStorage.getItem("coverageId") || "";
+  const medicationRequestId = query.get("medicationRequestId") || localStorage.getItem("medicationRequestId") || "";
+
+  const questionnaireId = query.get("questionnaireId") || "questionnaire-package-request";
+
   const [isQuestionnaireResponseSubmited, setIsQuestionnaireResponseSubmited] =
     useState(false);
 
@@ -502,10 +508,11 @@ export default function DrugPiorAuthPage() {
       <div className="page-heading">
         Send a Prior-Authorizing Request for Drugs
       </div>
-      <DetailsDiv questionnaireId={questionnaireId || ""} />
+      {<DetailsDiv questionnaireId={questionnaireId || "questionnaire-package-request"} />}
       <PrescribedForm />
       <QuestionnniarForm
-        questionnaireId={questionnaireId || ""}
+        coverageId={coverageId}
+        medicationRequestId={medicationRequestId}
         isQuestionnaireResponseSubmited={isQuestionnaireResponseSubmited}
         setIsQuestionnaireResponseSubmited={setIsQuestionnaireResponseSubmited}
       />
