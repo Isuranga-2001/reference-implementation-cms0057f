@@ -36,9 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(false);
       const coverageId = query.get("coverageId") || "";
       const medicationRequestId = query.get("medicationRequestId") || "";
+      const patientId = query.get("patientId") || "";
 
       localStorage.setItem("coverageId", coverageId);
       localStorage.setItem("medicationRequestId", medicationRequestId);
+      localStorage.setItem("patientId", patientId);
+
+      console.log("Patient ID (Auth): ", patientId);
 
       navigate("/login");
     }

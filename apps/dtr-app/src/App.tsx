@@ -29,6 +29,7 @@ declare global {
       location: string;
       appointment: string;
       patient: string;
+      medicationRequest: string;
     };
   }
 }

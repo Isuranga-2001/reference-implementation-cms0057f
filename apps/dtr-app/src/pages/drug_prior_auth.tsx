@@ -32,8 +32,8 @@ import {
 } from "../redux/cdsRequestSlice";
 import { updateCdsResponse, resetCdsResponse } from "../redux/cdsResponseSlice";
 import { useAuth } from "../components/AuthProvider";
-import { PATIENT_DETAILS } from "../constants/data";
 import { selectPatient } from "../redux/patientSlice";
+import { Patient } from "../components/interfaces/patient"
 
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
@@ -92,7 +92,7 @@ const QuestionnniarForm = ({
     dispatch(resetCdsResponse());
     // Fetch the questionnaire data from the API
     const Config = window.Config;
-    dispatch(updateRequestUrl(Config.demoBaseUrl + Config.questionnaire_package));
+    dispatch(updateRequestUrl(Config.questionnaire_package));
     dispatch(updateRequestMethod("POST"));
     dispatch(updateRequest(requestBody));
 
@@ -357,87 +357,82 @@ const QuestionnniarForm = ({
   );
 };
 
-const PrescribedForm = () => {
-  const medicationFormData = useSelector(
-    (state: {
-      medicationFormData: {
-        treatingSickness: string;
-        medication: string;
-        quantity: number;
-        frequency: string;
-        startDate: Date;
-        duration: string;
-      };
-    }) => state.medicationFormData
-  );
-  const treatingSickness = medicationFormData.treatingSickness;
-  const medication = medicationFormData.medication;
-  const quantity = medicationFormData.quantity;
-  const frequency = medicationFormData.frequency;
-  const duration = medicationFormData.duration;
+const PrescribedForm = ({ medicationRequestId }: { medicationRequestId: string }) => {
+  const [medicationData, setMedicationData] = useState<{
+    medication: string;
+    quantity: string;
+    frequency: string;
+    duration: string;
+    startDate: Date | null;
+  }>({
+    medication: "",
+    quantity: "",
+    frequency: "",
+    duration: "",
+    startDate: null,
+  });
+
+  useEffect(() => {
+    const fetchMedicationRequest = async () => {
+      try {
+        const Config = window.Config;
+        const response = await axios.get(`${Config.medicationRequest}/${medicationRequestId}`);
+        if (response.status >= 200 && response.status < 300) {
+          const data = response.data;
+          setMedicationData({
+            medication: data.medicationCodeableConcept?.text || "",
+            quantity: `${data.dispenseRequest?.quantity?.value || ""} ${data.dispenseRequest?.quantity?.unit || ""}`,
+            frequency: data.dosageInstruction?.[0]?.text || "",
+            duration: `${data.dispenseRequest?.expectedSupplyDuration?.value || ""} ${data.dispenseRequest?.expectedSupplyDuration?.unit || ""}`,
+            startDate: data.dosageInstruction?.[0]?.timing?.repeat?.boundsPeriod?.start
+              ? new Date(data.dosageInstruction[0].timing.repeat.boundsPeriod.start)
+              : null,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching medication request:", error);
+      }
+    };
+
+    fetchMedicationRequest();
+  }, [medicationRequestId]);
 
   return (
     <Card style={{ marginTop: "30px", padding: "20px" }}>
       <Card.Body>
         <Card.Title>Prescribed Medicine</Card.Title>
         <Form>
-          <Form.Group
-            controlId="formTreatingSickness"
-            style={{ marginTop: "20px" }}
-          >
-            <Form.Label>Treating Sickness</Form.Label>
-            <Form.Control type="text" value={treatingSickness || ""} disabled />
-          </Form.Group>
-
           <Form.Group controlId="formMedication" style={{ marginTop: "20px" }}>
             <Form.Label>Medication</Form.Label>
-            <Form.Control type="text" value={medication || ""} disabled />
+            <Form.Control type="text" value={medicationData.medication} disabled />
           </Form.Group>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-            }}
-          >
-            <Form.Group
-              controlId="formQuantity"
-              style={{ marginTop: "20px", flex: "1 1 100%" }}
-            >
+          <div style={{ display: "flex", gap: "20px" }}>
+            <Form.Group controlId="formQuantity" style={{ marginTop: "20px", flex: "1 1 100%" }}>
               <Form.Label>Quantity</Form.Label>
-              <Form.Control type="text" value={quantity || ""} disabled />
+              <Form.Control type="text" value={medicationData.quantity} disabled />
             </Form.Group>
 
-            <Form.Group
-              controlId="formFrequency"
-              style={{ marginTop: "20px", flex: "1 1 100%" }}
-            >
+            <Form.Group controlId="formFrequency" style={{ marginTop: "20px", flex: "1 1 100%" }}>
               <Form.Label>Frequency</Form.Label>
-              <Form.Control type="text" value={frequency || ""} disabled />
+              <Form.Control type="text" value={medicationData.frequency} disabled />
             </Form.Group>
 
-            <Form.Group
-              controlId="formDuration"
-              style={{ marginTop: "20px", flex: "1 1 100%" }}
-            >
+            <Form.Group controlId="formDuration" style={{ marginTop: "20px", flex: "1 1 100%" }}>
               <Form.Label>Duration (days)</Form.Label>
-              <Form.Control type="text" value={duration || ""} disabled />
+              <Form.Control type="text" value={medicationData.duration} disabled />
             </Form.Group>
 
-            <Form.Group
-              controlId="formStartDate"
-              style={{ marginTop: "20px", flex: "1 1 100%", width: "100%" }}
-            >
+            <Form.Group controlId="formStartDate" style={{ marginTop: "20px", flex: "1 1 100%", width: "100%" }}>
               <Form.Label>Starting Date</Form.Label>
               <br />
               <DatePicker
-                selected={medicationFormData.startDate}
+                selected={medicationData.startDate}
                 dateFormat="yyyy/MM/dd"
                 className="form-control"
                 wrapperClassName="date-picker-full-width"
-                disabled onChange={function (date: Date | null): void {
-                  throw new Error(`Function not implemented. Date: ${date}`);
-                }} />
+                disabled
+              />
             </Form.Group>
           </div>
         </Form>
@@ -446,19 +441,28 @@ const PrescribedForm = () => {
   );
 };
 
-const DetailsDiv = ({ questionnaireId }: { questionnaireId: string }) => {
-  console.log("questionnaireId:", questionnaireId);
+const DetailsDiv = ({ patientId }: { patientId: string }) => {
   const dispatch = useDispatch();
-  const savedPatientId = localStorage.getItem("selectedPatientId");
-  if (savedPatientId) {
-    dispatch(selectPatient(savedPatientId));
-  }
-  const selectedPatientId = useSelector(
-    (state: any) => state.patient.selectedPatientId
-  );
-  const currentPatient = PATIENT_DETAILS.find(
-    (patient) => patient.id === selectedPatientId
-  );
+  const [patient, setPatient] = useState<Patient | null>(null);
+
+  console.log("Patient ID (DetailsDiv): ", patientId);
+
+  useEffect(() => {
+    const fetchPatientDetails = async () => {
+      try {
+        const Config = window.Config;
+        const response = await axios.get(`${Config.patient}/${patientId}`);
+        if (response.status >= 200 && response.status < 300) {
+          setPatient(response.data);
+          dispatch(selectPatient(response.data.id));
+        }
+      } catch (error) {
+        console.error("Error fetching patient details:", error);
+      }
+    };
+
+    fetchPatientDetails();
+  }, [patientId, dispatch]);
 
   return (
     <div style={{ display: "flex", gap: "20px" }}>
@@ -469,7 +473,11 @@ const DetailsDiv = ({ questionnaireId }: { questionnaireId: string }) => {
         <Form.Label>Patient Name</Form.Label>
         <Form.Control
           type="text"
-          value={`${currentPatient?.name[0].given[0]} ${currentPatient?.name[0].family}`}
+          value={
+            patient
+              ? `${patient.name[0].given[0]} ${patient.name[0].family}`
+              : "Loading..."
+          }
           disabled
         />
       </Form.Group>
@@ -478,15 +486,12 @@ const DetailsDiv = ({ questionnaireId }: { questionnaireId: string }) => {
         style={{ marginTop: "20px", flex: "1 1 100%" }}
       >
         <Form.Label>Patient ID</Form.Label>
-        <Form.Control type="text" value={currentPatient?.id} disabled />
+        <Form.Control
+          type="text"
+          value={patient ? patient.id : "Loading..."}
+          disabled
+        />
       </Form.Group>
-      {/* <Form.Group
-        controlId="formPatientName"
-        style={{ marginTop: "20px", flex: "1 1 100%" }}
-      >
-        <Form.Label>Questionnaire ID</Form.Label>
-        <Form.Control type="text" value={questionnaireId} disabled />
-      </Form.Group> */}
     </div>
   );
 };
@@ -497,19 +502,18 @@ export default function DrugPiorAuthPage() {
 
   const coverageId = query.get("coverageId") || localStorage.getItem("coverageId") || "";
   const medicationRequestId = query.get("medicationRequestId") || localStorage.getItem("medicationRequestId") || "";
-
-  const questionnaireId = query.get("questionnaireId") || "questionnaire-package-request";
+  const patientId = query.get("patientId") || localStorage.getItem("patientId") || "";
 
   const [isQuestionnaireResponseSubmited, setIsQuestionnaireResponseSubmited] =
     useState(false);
 
   return isAuthenticated ? (
     <div style={{ marginLeft: 50, marginBottom: 50 }}>
-      <div className="page-heading">
+      <div className="page-heading" style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
         Send a Prior-Authorizing Request for Drugs
       </div>
-      {<DetailsDiv questionnaireId={questionnaireId || "questionnaire-package-request"} />}
-      <PrescribedForm />
+      {<DetailsDiv patientId={patientId} />}
+      <PrescribedForm medicationRequestId={medicationRequestId} />
       <QuestionnniarForm
         coverageId={coverageId}
         medicationRequestId={medicationRequestId}

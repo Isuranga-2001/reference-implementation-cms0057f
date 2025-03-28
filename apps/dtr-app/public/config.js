@@ -31,7 +31,8 @@ const Config = {
     "/choreo-apis/cms-0057-f/claim-submission-servi-hk/v1/fhir/r4/Claim/submit",
   practitioner_new:
     "/choreo-apis/cms-0057-f/practitioner-service-um/v1.0/fhir/r4/Practitioner",
-  patient: "/choreo-apis/cms-0057-f/patient-service/v1.0/fhir/r4/Patient",
+  patient: "/choreo-apis/cms-0057-f/patient-service/v1/fhir/r4/Patient/",
+  medicationRequest: "/choreo-apis/cms-0057-f/medication-request-ser-tw/v1/fhir/r4/MedicationRequest",
 
   // old urls
   radiology_order:
