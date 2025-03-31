@@ -500,6 +500,15 @@ export default function DrugPiorAuthPage() {
   const { isAuthenticated } = useAuth();
   const query = useQuery();
 
+  // Check if redirected from the specified URL and close the window
+  useEffect(() => {
+    const referrer = document.referrer;
+    const targetUrl = "https://c32618cf-389d-44f1-93ee-b67a3468aae3-dev.e1-us-east-azure.choreosts.dev/";
+    if (referrer === targetUrl) {
+      window.close();
+    }
+  }, []);
+
   const coverageId = query.get("coverageId") || sessionStorage.getItem("coverageId") || "";
   const medicationRequestId = query.get("medicationRequestId") || sessionStorage.getItem("medicationRequestId") || "";
   const patientId = query.get("patientId") || sessionStorage.getItem("patientId") || "";
