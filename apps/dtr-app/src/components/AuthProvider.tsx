@@ -42,8 +42,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       sessionStorage.setItem("medicationRequestId", medicationRequestId);
       sessionStorage.setItem("patientId", patientId);
 
-      console.log("Patient ID (Auth): ", patientId);
-
       navigate("/login");
     }
   };

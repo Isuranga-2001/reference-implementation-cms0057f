@@ -71,11 +71,16 @@ function LoginV2() {
                 fontSize: "1.5rem",
               }}
               onClick={() => {
-                const popup = window.open("/auth/login", "LoginPopup", "width=600,height=600");
+                // window.location.href = "/auth/login";
+                const popup = window.open(
+                  "/auth/login",
+                  "LoginPopup",
+                  "width=600,height=600"
+                );
                 const interval = setInterval(() => {
                   if (popup && popup.closed) {
                     clearInterval(interval);
-                    window.location.href = "/";
+                    window.parent.location.href = "/";
                   }
                 }, 500);
               }}

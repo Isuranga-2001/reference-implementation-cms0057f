@@ -445,12 +445,11 @@ const DetailsDiv = ({ patientId }: { patientId: string }) => {
   const dispatch = useDispatch();
   const [patient, setPatient] = useState<Patient | null>(null);
 
-  console.log("Patient ID (DetailsDiv): ", patientId);
-
   useEffect(() => {
     const fetchPatientDetails = async () => {
       try {
         const Config = window.Config;
+        patientId = patientId || sessionStorage.getItem("patientId") || "101";
         const response = await axios.get(`${Config.patient}/${patientId}`);
         if (response.status >= 200 && response.status < 300) {
           setPatient(response.data);
