@@ -33,7 +33,7 @@ import {
 import { updateCdsResponse, resetCdsResponse } from "../redux/cdsResponseSlice";
 import { useAuth } from "../components/AuthProvider";
 import { selectPatient } from "../redux/patientSlice";
-import { Patient } from "../components/interfaces/patient"
+import { Patient } from "../components/interfaces/patient";
 
 const useQuery = () => {
   return new URLSearchParams(useLocation().search);
@@ -357,7 +357,11 @@ const QuestionnniarForm = ({
   );
 };
 
-const PrescribedForm = ({ medicationRequestId }: { medicationRequestId: string }) => {
+const PrescribedForm = ({
+  medicationRequestId,
+}: {
+  medicationRequestId: string;
+}) => {
   const [medicationData, setMedicationData] = useState<{
     medication: string;
     quantity: string;
@@ -376,16 +380,25 @@ const PrescribedForm = ({ medicationRequestId }: { medicationRequestId: string }
     const fetchMedicationRequest = async () => {
       try {
         const Config = window.Config;
-        const response = await axios.get(`${Config.medicationRequest}/${medicationRequestId}`);
+        const response = await axios.get(
+          `${Config.medicationRequest}/${medicationRequestId}`
+        );
         if (response.status >= 200 && response.status < 300) {
           const data = response.data;
           setMedicationData({
             medication: data.medicationCodeableConcept?.text || "",
-            quantity: `${data.dispenseRequest?.quantity?.value || ""} ${data.dispenseRequest?.quantity?.unit || ""}`,
+            quantity: `${data.dispenseRequest?.quantity?.value || ""} ${
+              data.dispenseRequest?.quantity?.unit || ""
+            }`,
             frequency: data.dosageInstruction?.[0]?.text || "",
-            duration: `${data.dispenseRequest?.expectedSupplyDuration?.value || ""} ${data.dispenseRequest?.expectedSupplyDuration?.unit || ""}`,
-            startDate: data.dosageInstruction?.[0]?.timing?.repeat?.boundsPeriod?.start
-              ? new Date(data.dosageInstruction[0].timing.repeat.boundsPeriod.start)
+            duration: `${
+              data.dispenseRequest?.expectedSupplyDuration?.value || ""
+            } ${data.dispenseRequest?.expectedSupplyDuration?.unit || ""}`,
+            startDate: data.dosageInstruction?.[0]?.timing?.repeat?.boundsPeriod
+              ?.start
+              ? new Date(
+                  data.dosageInstruction[0].timing.repeat.boundsPeriod.start
+                )
               : null,
           });
         }
@@ -404,26 +417,54 @@ const PrescribedForm = ({ medicationRequestId }: { medicationRequestId: string }
         <Form>
           <Form.Group controlId="formMedication" style={{ marginTop: "20px" }}>
             <Form.Label>Medication</Form.Label>
-            <Form.Control type="text" value={medicationData.medication} disabled />
+            <Form.Control
+              type="text"
+              value={medicationData.medication}
+              disabled
+            />
           </Form.Group>
 
           <div style={{ display: "flex", gap: "20px" }}>
-            <Form.Group controlId="formQuantity" style={{ marginTop: "20px", flex: "1 1 100%" }}>
+            <Form.Group
+              controlId="formQuantity"
+              style={{ marginTop: "20px", flex: "1 1 100%" }}
+            >
               <Form.Label>Quantity</Form.Label>
-              <Form.Control type="text" value={medicationData.quantity} disabled />
+              <Form.Control
+                type="text"
+                value={medicationData.quantity}
+                disabled
+              />
             </Form.Group>
 
-            <Form.Group controlId="formFrequency" style={{ marginTop: "20px", flex: "1 1 100%" }}>
+            <Form.Group
+              controlId="formFrequency"
+              style={{ marginTop: "20px", flex: "1 1 100%" }}
+            >
               <Form.Label>Frequency</Form.Label>
-              <Form.Control type="text" value={medicationData.frequency} disabled />
+              <Form.Control
+                type="text"
+                value={medicationData.frequency}
+                disabled
+              />
             </Form.Group>
 
-            <Form.Group controlId="formDuration" style={{ marginTop: "20px", flex: "1 1 100%" }}>
+            <Form.Group
+              controlId="formDuration"
+              style={{ marginTop: "20px", flex: "1 1 100%" }}
+            >
               <Form.Label>Duration (days)</Form.Label>
-              <Form.Control type="text" value={medicationData.duration} disabled />
+              <Form.Control
+                type="text"
+                value={medicationData.duration}
+                disabled
+              />
             </Form.Group>
 
-            <Form.Group controlId="formStartDate" style={{ marginTop: "20px", flex: "1 1 100%", width: "100%" }}>
+            <Form.Group
+              controlId="formStartDate"
+              style={{ marginTop: "20px", flex: "1 1 100%", width: "100%" }}
+            >
               <Form.Label>Starting Date</Form.Label>
               <br />
               <DatePicker
@@ -496,29 +537,38 @@ const DetailsDiv = ({ patientId }: { patientId: string }) => {
   );
 };
 
-export default function DrugPiorAuthPage() {  
+export default function DrugPiorAuthPage() {
   const { isAuthenticated } = useAuth();
   const query = useQuery();
 
   // Check if redirected from the specified URL and close the window
   useEffect(() => {
     const referrer = document.referrer;
-    const targetUrl = "https://c32618cf-389d-44f1-93ee-b67a3468aae3-dev.e1-us-east-azure.choreosts.dev/";
+    const targetUrl =
+      "https://c32618cf-389d-44f1-93ee-b67a3468aae3-dev.e1-us-east-azure.choreosts.dev/";
     if (referrer === targetUrl) {
       window.close();
     }
   }, []);
 
-  const coverageId = query.get("coverageId") || sessionStorage.getItem("coverageId") || "";
-  const medicationRequestId = query.get("medicationRequestId") || sessionStorage.getItem("medicationRequestId") || "";
-  const patientId = query.get("patientId") || sessionStorage.getItem("patientId") || "";
+  const coverageId =
+    query.get("coverageId") || sessionStorage.getItem("coverageId") || "";
+  const medicationRequestId =
+    query.get("medicationRequestId") ||
+    sessionStorage.getItem("medicationRequestId") ||
+    "";
+  const patientId =
+    query.get("patientId") || sessionStorage.getItem("patientId") || "";
 
   const [isQuestionnaireResponseSubmited, setIsQuestionnaireResponseSubmited] =
     useState(false);
 
   return isAuthenticated ? (
     <div style={{ marginLeft: 50, marginBottom: 50 }}>
-      <div className="page-heading" style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
+      <div
+        className="page-heading"
+        style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}
+      >
         Send a Prior-Authorizing Request for Drugs
       </div>
       {<DetailsDiv patientId={patientId} />}

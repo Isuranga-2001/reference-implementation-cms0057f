@@ -30,19 +30,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (response.status == 200) {
       setIsAuthenticated(true);
-      const redirectTo = originalPath || "/";
-      navigate(redirectTo, { replace: true });
+
+      // change the URL of the parent window to the original path
+      // window.parent.history.pushState({}, "", originalPath);
+
+      // window.close();
     } else if (response.status == 401) {
       setIsAuthenticated(false);
-      const coverageId = query.get("coverageId") || "";
-      const medicationRequestId = query.get("medicationRequestId") || "";
-      const patientId = query.get("patientId") || "";
 
-      sessionStorage.setItem("coverageId", coverageId);
-      sessionStorage.setItem("medicationRequestId", medicationRequestId);
-      sessionStorage.setItem("patientId", patientId);
-
-      console.log("Patient ID (Auth): ", patientId);
+      sessionStorage.setItem("coverageId", query.get("coverageId") || "");
+      sessionStorage.setItem(
+        "medicationRequestId",
+        query.get("medicationRequestId") || ""
+      );
+      sessionStorage.setItem("patientId", query.get("patientId") || "");
 
       navigate("/login");
     }
