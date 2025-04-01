@@ -33,12 +33,18 @@ import { Alert, Snackbar } from "@mui/material";
 import { selectPatient } from "../redux/patientSlice";
 import Lottie from "react-lottie";
 import successAnimation from "../animations/success-animation.json"; // Add your animation JSON file here
+import PatientInfo from "../components/PatientInfo";
 
 const ClaimForm = () => {
   const dispatch = useDispatch();
   const medicationFormData = useSelector(
-    (state: { medicationFormData: { medication: string; quantity: string } }) =>
-      state.medicationFormData
+    (state: {
+      medicationFormData: {
+        medication: string;
+        frequency: number;
+        period: number;
+      };
+    }) => state.medicationFormData
   );
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertSeverity, setAlertSeverity] = useState<
@@ -67,7 +73,7 @@ const ClaimForm = () => {
 
   const [formData, setFormData] = useState<{
     medication: string;
-    quantity: string;
+    quantity: number;
     patient: string;
     provider: string;
     insurer: string;
@@ -77,10 +83,10 @@ const ClaimForm = () => {
     unitPrice: string;
   }>({
     medication: medicationFormData.medication,
-    quantity: medicationFormData.quantity,
+    quantity: medicationFormData.frequency * medicationFormData.period,
     patient:
       currentPatient?.name[0].given[0] + " " + currentPatient?.name[0].family,
-    provider: loggedUser?.first_name + " " + loggedUser?.last_name,
+    provider: "PractitionerRole/456",
     insurer: "Organization/insurance-org",
     use: "preauthorization",
     supportingInfo: "QuestionnaireResponse/1122",
@@ -97,6 +103,7 @@ const ClaimForm = () => {
   };
 
   const handleSubmit = () => {
+    const Config = window.Config;
     const payload = CLAIM_REQUEST_BODY(
       formData.patient,
       formData.provider,
@@ -109,11 +116,12 @@ const ClaimForm = () => {
       formData.unitPrice
     );
     console.log("payload", payload);
-    dispatch(updateRequest(payload));
-    dispatch(updateRequestMethod("POST"));
-    dispatch(updateRequestUrl("/fhir/r4/Claim/$submit"));
     dispatch(resetCdsResponse());
-    const Config = window.Config;
+
+    dispatch(updateRequestMethod("POST"));
+    dispatch(updateRequestUrl(Config.demoBaseUrl + Config.claim_submit));
+    dispatch(updateRequest(payload));
+
     axios
       .post(Config.claim_submit, payload, {
         headers: {
@@ -205,7 +213,8 @@ const ClaimForm = () => {
               <Form.Label>Practitioner</Form.Label>
               <Form.Control
                 type="text"
-                value={formData.provider}
+                // value={formData.provider}
+                value={loggedUser?.first_name + " " + loggedUser?.last_name}
                 onChange={handleChange}
                 disabled
               />
@@ -217,7 +226,7 @@ const ClaimForm = () => {
               <Form.Label>Insurer</Form.Label>
               <Form.Control
                 type="text"
-                value={formData.insurer}
+                value="UnitedCare Health Insurance"
                 onChange={handleChange}
                 disabled
               />
@@ -231,6 +240,18 @@ const ClaimForm = () => {
             }}
           >
             <Form.Group
+              controlId="category"
+              style={{ marginTop: "20px", flex: "1 1 100%" }}
+            >
+              <Form.Label>Category</Form.Label>
+              <Form.Control
+                type="text"
+                value={formData.category}
+                onChange={handleChange}
+                disabled
+              />
+            </Form.Group>
+            <Form.Group
               controlId="use"
               style={{ marginTop: "20px", flex: "1 1 100%" }}
             >
@@ -243,7 +264,7 @@ const ClaimForm = () => {
               />
             </Form.Group>
 
-            <Form.Group
+            {/* <Form.Group
               controlId="supportingInfo"
               style={{ marginTop: "20px", flex: "1 1 100%" }}
             >
@@ -254,18 +275,8 @@ const ClaimForm = () => {
                 onChange={handleChange}
                 disabled
               />
-            </Form.Group>
+            </Form.Group> */}
           </div>
-
-          <Form.Group controlId="category" style={{ marginTop: "20px" }}>
-            <Form.Label>Category</Form.Label>
-            <Form.Control
-              type="text"
-              value={formData.category}
-              onChange={handleChange}
-              disabled
-            />
-          </Form.Group>
 
           <Form.Group controlId="medication" style={{ marginTop: "20px" }}>
             <Form.Label>Product/Service</Form.Label>
@@ -347,6 +358,7 @@ export default function DrugClaimPage() {
   return isAuthenticated ? (
     <div style={{ marginLeft: 50, marginBottom: 50 }}>
       <div className="page-heading">Claim Submission</div>
+      <PatientInfo />
       <ClaimForm />
       <style>{`
         .card {
