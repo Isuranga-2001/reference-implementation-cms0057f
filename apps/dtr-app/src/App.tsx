@@ -25,14 +25,13 @@ import { ExpandedContextProvider } from "./utils/expanded_context.tsx";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./redux/store.ts";
 import LoginPage from './pages/login_v2';
-import MissingParamPage from './pages/missing_param';
+import FetchingParamPage from './pages/fetching_param.tsx';
 import NavBar from './components/NavBar';
 
 // Extend the Window interface to include the Config property
 declare global {
   interface Window {
     Config: {
-      baseUrl: string;
       demoBaseUrl: string;
       medication_request: string;
       questionnaire_package: string;
@@ -75,7 +74,10 @@ function App() {
                     <Routes>
                       <Route path="/" element={<DrugPiorAuthPage />} />
                       <Route path="/login" element={<LoginPage />} />
-                      <Route path="/invalid-req" element={<MissingParamPage />} />
+                      <Route path="/fetching" element={<FetchingParamPage />} />
+
+                      {/* In case of any error */}
+                      <Route path="*" element={<FetchingParamPage />} />
                     </Routes>
                   </div>
                 </div>

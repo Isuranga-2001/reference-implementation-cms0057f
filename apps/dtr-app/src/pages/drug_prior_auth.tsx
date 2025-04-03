@@ -29,12 +29,17 @@ export default function DrugPiorAuthPage() {
   const { isAuthenticated } = useAuth();
   const query = useQuery();
 
-  const coverageId = query.get("coverageId") || sessionStorage.getItem("coverageId") || "";
-  const medicationRequestId = query.get("medicationRequestId") || sessionStorage.getItem("medicationRequestId") || "";
-  const patientId = query.get("patientId") || sessionStorage.getItem("patientId") || "";
+  const coverageId = query.get("coverageId") || sessionStorage.getItem("coverageId");
+  const medicationRequestId = query.get("medicationRequestId") || sessionStorage.getItem("medicationRequestId");
+  const patientId = query.get("patientId") || sessionStorage.getItem("patientId");
+
+  if (!coverageId || !medicationRequestId || !patientId) {
+    return (<Navigate to="/fetching" replace />);
+  }
 
   const [isQuestionnaireResponseSubmited, setIsQuestionnaireResponseSubmited] =
     useState(false);
+  const [practitionerId, setPractitionerId] = useState<string>("");
 
   return isAuthenticated ? (
     <div style={{ padding: "30px" }}>
@@ -42,12 +47,17 @@ export default function DrugPiorAuthPage() {
         Send a Prior-Authorizing Request for Drugs
       </div>
       <DetailsDiv patientId={patientId} />
-      <PrescribedForm medicationRequestId={medicationRequestId} />
+      <PrescribedForm
+        medicationRequestId={medicationRequestId}
+        setPractitionerIdCallback={setPractitionerId}
+      />
       <QuestionnniarForm
         coverageId={coverageId}
         medicationRequestId={medicationRequestId}
+        patientId={patientId}
         isQuestionnaireResponseSubmited={isQuestionnaireResponseSubmited}
         setIsQuestionnaireResponseSubmited={setIsQuestionnaireResponseSubmited}
+        practitionerId={practitionerId}
       />
       <style>{`
         .card {
