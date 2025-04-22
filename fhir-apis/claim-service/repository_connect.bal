@@ -170,66 +170,68 @@ isolated function orderByCreatedDate(davincipas:PASClaim[] targetArr) returns da
 
 isolated function getByCreatedDate(string created, davincipas:PASClaim[] targetArr) returns davincipas:PASClaim[]|r4:FHIRError {
     string operator = created.substring(0, 2);
-    string dateString = created.substring(2);
+    r4:dateTime datetimeR4 = created.substring(2);
 
-    time:Utc|time:Error dateTime = time:utcFromString(dateString);
-    if dateTime is time:Error {
-        return r4:createFHIRError(string `Invalid date format: ${dateString}`, r4:ERROR, r4:INVALID, httpStatusCode = http:STATUS_BAD_REQUEST);
+    // convert r4:dateTime to time:Utc
+    time:Utc|time:Error dateTimeUtc = time:utcFromString(datetimeR4.includes("T") ? datetimeR4 : datetimeR4 + "T00:00:00.000Z");
+    if dateTimeUtc is time:Error {
+        return r4:createFHIRError(string `Invalid date format: ${created}, ${dateTimeUtc.message()}`, r4:ERROR, r4:INVALID, httpStatusCode = http:STATUS_BAD_REQUEST);
     }
 
-    time:Utc lowerBound = time:utcAddSeconds(dateTime, 86400);
-    time:Utc upperBound = time:utcAddSeconds(dateTime, -86400);
+    time:Utc lowerBound = time:utcAddSeconds(dateTimeUtc, 86400);
+    time:Utc upperBound = time:utcAddSeconds(dateTimeUtc, -86400);
 
     davincipas:PASClaim[] filteredClaims = [];
     foreach davincipas:PASClaim claim in targetArr {
-        time:Utc|time:Error claimDateTime = time:utcFromString(claim.created);
-        if claimDateTime is time:Error {
+        r4:dateTime claimDateTimeR4 = claim.created;
+        time:Utc|time:Error claimDateTimeUtc = time:utcFromString(claimDateTimeR4.includes("T") ? claimDateTimeR4 : claimDateTimeR4 + "T00:00:00.000Z");
+        if claimDateTimeUtc is time:Error {
             continue; // Skip invalid date formats
         }
         match operator {
             "eq" => {
-                if claimDateTime == dateTime {
+                if claimDateTimeUtc == dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "ne" => {
-                if claimDateTime != dateTime {
+                if claimDateTimeUtc != dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "lt" => {
-                if claimDateTime < dateTime {
+                if claimDateTimeUtc < dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "gt" => {
-                if claimDateTime > dateTime {
+                if claimDateTimeUtc > dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "ge" => {
-                if claimDateTime >= dateTime {
+                if claimDateTimeUtc >= dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "le" => {
-                if claimDateTime <= dateTime {
+                if claimDateTimeUtc <= dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "sa" => {
-                if claimDateTime > dateTime {
+                if claimDateTimeUtc > dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "eb" => {
-                if claimDateTime < dateTime {
+                if claimDateTimeUtc < dateTimeUtc {
                     filteredClaims.push(claim.clone());
                 }
             }
             "ap" => {
                 // Approximation: Check if the claim date is within 1 day of the given date
-                if claimDateTime >= lowerBound && claimDateTime <= upperBound {
+                if claimDateTimeUtc >= lowerBound && claimDateTimeUtc <= upperBound {
                     filteredClaims.push(claim.clone());
                 }
             }
